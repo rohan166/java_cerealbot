@@ -15,15 +15,51 @@ public class Bot implements IRCEventListener
   private int userCount;
   private Session session;
   private String channel;
+  private int qcount;
+
   public Bot(String server, String channel)
   {
     // To connect to the irc server
     ConnectionManager conman = new ConnectionManager(new Profile("cerealbot"));
     // To hold the sessino for one server
     session = conman.requestConnection(server);
+    parseQuotes();
     session.addIRCEventListener(this);
     session.setRejoinOnKick(true);
     this.channel = new String(channel);
+  }
+
+  public void parseQuotes()
+  {
+    int count = 0;
+    File file = new File("quotes");
+    BufferedReader reader;
+    try
+    {
+      reader = new BufferedReader(new FileReader(file));
+      String text = null;
+      while((text = reader.readLine()) != null)
+      {
+        count++;
+      }
+      try
+      {
+        if(reader != null)
+          reader.close();
+      }
+      catch(IOException e)
+      {
+      }
+    }
+    catch(FileNotFoundException e)
+    {
+      e.printStackTrace();
+    }
+    catch(IOException e)
+    {
+      e.printStackTrace();
+    }
+    this.qcount = count;
   }
 
   public int absolute(int hash)
@@ -106,6 +142,141 @@ public class Bot implements IRCEventListener
       }
     }
   }
+
+  public void quote(String sender, Channel chan, String message)
+  {
+      String param = message.substring(6);
+      while(param.length() > 0 &&
+          param.substring(0,1).equals(" "))
+      {
+        param = param.substring(1);
+      }
+      int quotenum = -1;
+      String num = new String("");
+      if(param.length() > 0)
+      {
+        while(param.length() > 0 &&
+            Character.isDigit(param.charAt(0)))
+        {
+          num = num + param.substring(0,1);
+          param = param.substring(1);
+        }
+        try
+        {
+          quotenum = Integer.parseInt(num);
+        }
+        catch(NumberFormatException e)
+        {
+          e.printStackTrace();
+        }
+      }
+      if(quotenum < 0 || quotenum >= qcount)
+      {
+        Random rand = new Random();
+        quotenum = rand.nextInt(qcount);
+      }
+      File file = new File("quotes");
+      BufferedReader reader;
+      try
+      {
+        reader = new BufferedReader(new FileReader(file));
+        int count = 0;
+        String quote;
+        while((quote = reader.readLine()) != null
+                && count++ < quotenum)
+          ;
+        chan.say(sender + " : Quote " + quotenum + " of " + qcount +
+                  " : " + quote);
+        try
+        {
+          if(reader != null)
+            reader.close();
+        }
+        catch(IOException e)
+        {
+        }
+      }
+      catch(FileNotFoundException e)
+      {
+        e.printStackTrace();
+      }
+      catch(IOException e)
+      {
+        e.printStackTrace();
+      }
+  }
+
+  public void parseURL(String message,Channel chan)
+  {
+      String url;
+      if(message.contains("http://"))
+          url = message.substring(message.indexOf("http://"));
+      else
+        url = message.substring(message.indexOf("https://"));
+      if(url.contains(" "))
+      {
+        int spaceindex = url.indexOf(" ");
+        url = url.substring(0,spaceindex);
+      }
+      URL page;
+      InputStream is;
+      BufferedReader br;
+      String line;
+      try
+      {
+        page = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection)page.openConnection();
+        connection.setRequestMethod("HEAD");
+        connection.connect();
+        String contentType = connection.getContentType();
+        if(contentType.contains("html"))
+        {
+          is = page.openStream();
+          br = new BufferedReader(new InputStreamReader(is));
+          String title = new String("");
+          boolean titleCheck = false;
+          int start = 0, end = 0;
+          int letterCase = 0;
+          while((line = br.readLine()) != null)
+          {
+            if(line.contains("<title>") ||
+                line.contains("<TITLE"))
+            {
+              titleCheck = true;
+              if(line.contains("<TITLE>"))
+                letterCase++;
+            }
+            if(titleCheck)
+              title = title.concat(line);
+            if(line.contains("</title>") ||
+                line.contains("</TITLE>"))
+              break;
+          }
+          if(letterCase == 0)
+          {
+            start = title.indexOf("<title>") + 7;
+            end = title.indexOf("</title>");
+          }
+          else
+          {
+            start = title.indexOf("<TITLE>") + 7;
+            end = title.indexOf("</TITLE>");
+          }
+          title = title.substring(start,end);
+          chan.say(title);
+          if(is != null)
+            is.close();
+        }
+      }
+      catch(MalformedURLException mue)
+      {
+        mue.printStackTrace();
+      }
+      catch(IOException ioe)
+      {
+        ioe.printStackTrace();
+      }
+  }
   
   public void receiveEvent(IRCEvent e)
   {
@@ -170,6 +341,11 @@ public class Bot implements IRCEventListener
         int index = message.substring(2).indexOf('/') + 2;
         String toReplace = message.substring(2,index);
         String replaceWith = message.substring(index+1);
+        if(replaceWith.contains("/"))
+        {
+          replaceWith = replaceWith.substring(0,
+                        replaceWith.indexOf('/'));
+        }
         String suffix = sender + " meant to say : ";
         String line = nick.returnMatch(toReplace);
         if(line != null)
@@ -188,78 +364,48 @@ public class Bot implements IRCEventListener
         note = note.substring(note.indexOf(" "));
         if(getUser(dstNick) != null)
           getUser(dstNick).reminder(sender,note);
+        chan.say(sender + " : I'll pass that on when " + dstNick + 
+                  "is around.");
+      }
+      else if(message.length() > 10 &&
+          message.substring(0,9).equals(".addquote"))
+      {
+        BufferedWriter out = null;
+        addLog = false;
+        try
+        {
+          String quote = message.substring(9);
+          FileWriter fstream = new FileWriter("quotes",true);
+          out = new BufferedWriter(fstream);
+          out.write("\n" + quote);
+          qcount++;
+        }
+        catch(IOException ioe)
+        {
+          System.err.println("Error: " + ioe.getMessage());
+        }
+        finally
+        {
+          try
+          {
+            if(out != null)
+              out.close();
+          }
+          catch(IOException ioe)
+          {
+          }
+        }
+      }
+      else if(message.length() > 5 &&
+          message.substring(0,6).equals(".quote"))
+      {
+        quote(sender,chan,message);
+        addLog = false;
       }
       else if(message.contains("http://") ||
               message.contains("https://"))
       {
-        String url;
-        if(message.contains("http://"))
-            url = message.substring(message.indexOf("http://"));
-        else
-          url = message.substring(message.indexOf("https://"));
-        if(url.contains(" "))
-        {
-          int spaceindex = url.indexOf(" ");
-          url = url.substring(0,spaceindex);
-        }
-        URL page;
-        InputStream is;
-        BufferedReader br;
-        String line;
-        try
-        {
-          page = new URL(url);
-          HttpURLConnection connection = (HttpURLConnection)page.openConnection();
-          connection.setRequestMethod("HEAD");
-          connection.connect();
-          String contentType = connection.getContentType();
-          if(contentType.contains("html"))
-          {
-            is = page.openStream();
-            br = new BufferedReader(new InputStreamReader(is));
-            String title = new String("");
-            boolean titleCheck = false;
-            int start = 0, end = 0;
-            int letterCase = 0;
-            while((line = br.readLine()) != null)
-            {
-              if(line.contains("<title>") ||
-                  line.contains("<TITLE"))
-              {
-                titleCheck = true;
-                if(line.contains("<TITLE>"))
-                  letterCase++;
-              }
-              if(titleCheck)
-                title = title.concat(line);
-              if(line.contains("</title>") ||
-                  line.contains("</TITLE>"))
-                break;
-            }
-            if(letterCase == 0)
-            {
-              start = title.indexOf("<title>") + 7;
-              end = title.indexOf("</title>");
-            }
-            else
-            {
-              start = title.indexOf("<TITLE>") + 7;
-              end = title.indexOf("</TITLE>");
-            }
-            title = title.substring(start,end);
-            chan.say(title);
-            if(is != null)
-              is.close();
-          }
-        }
-        catch(MalformedURLException mue)
-        {
-          mue.printStackTrace();
-        }
-        catch(IOException ioe)
-        {
-          ioe.printStackTrace();
-        }
+        parseURL(message,chan);
       }
       if(addLog)
       {
@@ -310,6 +456,43 @@ public class Bot implements IRCEventListener
   {
     String server = "irc.darknedgy.net";
     String channel = "#cerealtest";
+
+    File file = new File("config");
+    BufferedReader reader;
+    try
+    {
+      reader = new BufferedReader(new FileReader(file));
+      String text = null;
+      while((text = reader.readLine()) != null)
+      {
+        if(text.substring(0,9).equals("server : "))
+        {
+          text = text.substring(9);
+          server = new String(text);
+        }
+        else if(text.substring(0,10).equals("channel : "))
+        {
+          text = text.substring(10);
+          channel = new String(text);
+        }
+      }
+      try
+      {
+        if(reader != null)
+          reader.close();
+      }
+      catch(IOException e)
+      {
+      }
+    }
+    catch(FileNotFoundException e)
+    {
+      e.printStackTrace();
+    }
+    catch(IOException e)
+    {
+      e.printStackTrace();
+    }
 
     Bot cerealbot = new Bot(server,channel);
   }
