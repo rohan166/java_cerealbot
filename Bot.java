@@ -395,6 +395,15 @@ public class Bot implements IRCEventListener
           {
           }
         }
+        try
+        {
+          Process pb = Runtime.getRuntime().exec(
+              "scp quotes kira@darknedgy.net:/var/www/dne/quotes/");
+        }
+        catch(IOException ioe)
+        {
+          ioe.printStackTrace();
+        }
       }
       else if(message.length() > 5 &&
           message.substring(0,6).equals(".quote"))
