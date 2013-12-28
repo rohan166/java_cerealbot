@@ -327,9 +327,16 @@ public class Bot implements IRCEventListener
         session.sayPrivate(sender,"Here are the commands that I understand :");
         session.sayPrivate(sender,"1. .help - display the list of " + 
                                   "commands in a PM");
-        session.sayPrivate(sender, "2. .tell <nick> <message> - post <message>" +
-                                   "the next time user <nick> posts something.");
-        session.sayPrivate(sender,"3. s/<text entered previously>/<text to " +
+        session.sayPrivate(sender,"2. .tell <nick> <message> - post <message>" +
+                                  "the next time user <nick> posts something.");
+        session.sayPrivate(sender,"3. .addquote <quote> - adds <quote> to the" +
+                                  " list of quotes at quotes.darknedgy.net");
+        session.sayPrivate(sender,"4. .quote <n> - displays the <n>th quote " +
+                                  "from the list of quotes at quotes.dark" +
+                                  "nedgy.net");
+        session.sayPrivate(sender,"If no number is entered fater <n>, a " +
+                                  "random quote is displayed");
+        session.sayPrivate(sender,"5. s/<text entered previously>/<text to " +
                                   "replace it with> - Replace any text you" + 
                                   " entered previously with some other text.");
         session.sayPrivate(sender,"The buffer is up to the last 10 posts");
