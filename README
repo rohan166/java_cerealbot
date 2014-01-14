@@ -6,9 +6,9 @@ A list of all the commands :
 
 1. .help                  - display the list of commands in a PM  
 2. .tell <nick> <message> - post <message>the next time user <nick> posts something.  
-3. .addquote <quote>      - adds <quote> to the list of quotes at quotes.darknedgy.net/  
+3. .addquote <quote>      - adds <quote> to the list of quotes at cerealkira.pw/quotes
 4. .quote <n>             - displays the <n>th quote from the list of quotes at   
-                            quotes.darknedgy.net  
+                            cerealkira.pw/quotes
                             If no number is entered after <n>, a random quote is displayed  
 5. s/<text entered previously>/<text to replace it with> - Replace any text you   
                                                            entered previously with some other text.  
