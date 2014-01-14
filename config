@@ -1,2 +1,2 @@
-server : irc.freenode.net
-channel : #ucsd
+server : irc.example.net
+channel : #example
