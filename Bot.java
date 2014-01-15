@@ -163,14 +163,14 @@ public class Bot implements IRCEventListener
         }
         try
         {
-          quotenum = Integer.parseInt(num);
+          quotenum = Integer.parseInt(num) - 1;
         }
         catch(NumberFormatException e)
         {
           e.printStackTrace();
         }
       }
-      if(quotenum < 0 || quotenum >= qcount)
+      if(quotenum < 0 || quotenum > qcount)
       {
         Random rand = new Random();
         quotenum = rand.nextInt(qcount);
@@ -185,7 +185,7 @@ public class Bot implements IRCEventListener
         while((quote = reader.readLine()) != null
                 && count++ < quotenum)
           ;
-        chan.say(sender + " : Quote " + quotenum + " of " + qcount +
+        chan.say(sender + " : Quote " + ++quotenum + " of " + qcount +
                   " : " + quote);
         try
         {
@@ -330,11 +330,11 @@ public class Bot implements IRCEventListener
         session.sayPrivate(sender,"2. .tell <nick> <message> - post <message>" +
                                   "the next time user <nick> posts something.");
         session.sayPrivate(sender,"3. .addquote <quote> - adds <quote> to the" +
-                                  " list of quotes at quotes.darknedgy.net");
+                                  " list of quotes at cerealkira.pw/quotes/");
         session.sayPrivate(sender,"4. .quote <n> - displays the <n>th quote " +
-                                  "from the list of quotes at quotes.dark" +
-                                  "nedgy.net");
-        session.sayPrivate(sender,"If no number is entered fater <n>, a " +
+                                  "from the list of quotes at cerealkira.pw/" +
+                                  "quotes/");
+        session.sayPrivate(sender,"If no number is entered after <n>, a " +
                                   "random quote is displayed");
         session.sayPrivate(sender,"5. s/<text entered previously>/<text to " +
                                   "replace it with> - Replace any text you" + 
@@ -356,8 +356,10 @@ public class Bot implements IRCEventListener
         String suffix = sender + " meant to say : ";
         String line = nick.returnMatch(toReplace);
         if(line != null)
-          line = suffix + line.replaceAll(toReplace,replaceWith);
-        chan.say(line);
+        {
+           line = suffix + line.replaceAll("(?i)" + toReplace,replaceWith);
+           chan.say(line);
+        }
       }
       else if(message.length() > 6 &&
           message.substring(0,6).equals(".tell "))
@@ -372,7 +374,7 @@ public class Bot implements IRCEventListener
         if(getUser(dstNick) != null)
           getUser(dstNick).reminder(sender,note);
         chan.say(sender + " : I'll pass that on when " + dstNick + 
-                  "is around.");
+                  " is around.");
       }
       else if(message.length() > 10 &&
           message.substring(0,9).equals(".addquote"))
@@ -384,8 +386,13 @@ public class Bot implements IRCEventListener
           String quote = message.substring(9);
           FileWriter fstream = new FileWriter("quotes",true);
           out = new BufferedWriter(fstream);
-          out.write("\n" + quote);
+          if(qcount > 0)
+          {
+            out.write("\n");
+          }
+          out.write(quote);
           qcount++;
+          chan.say(sender + " : Quote added.");
         }
         catch(IOException ioe)
         {
@@ -404,12 +411,12 @@ public class Bot implements IRCEventListener
         }
         try
         {
-          Process pb = Runtime.getRuntime().exec(
-              "scp quotes kira@darknedgy.net:/var/www/dne/quotes/");
+           Process pb = Runtime.getRuntime().exec(
+                        "cp quotes /data/www/quotes/");
         }
         catch(IOException ioe)
         {
-          ioe.printStackTrace();
+           ioe.printStackTrace();
         }
       }
       else if(message.length() > 5 &&

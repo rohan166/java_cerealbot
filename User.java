@@ -45,7 +45,7 @@ public class User
       for(int i = log.size() - 1; i >= 0; --i)
       {
          String message = log.get(i);
-         if(message.contains(pattern))
+         if(message.toLowerCase().contains(pattern.toLowerCase()))
          {
             return message;
          }
