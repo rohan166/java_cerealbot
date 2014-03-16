@@ -315,11 +315,13 @@ public class Bot implements IRCEventListener
 
       if(getUser(joinNick) == null)
         addUser(joinNick);
-
-      User nick = getUser(joinNick);
-      String messageForSender;
-      while((messageForSender = joinNick.returnLastMessage()) != null)
-        chan.say(messageForSender);
+      else
+      {
+        User nick = getUser(joinNick);
+        String messageForSender;
+        while((messageForSender = joinNick.returnLastMessage()) != null)
+            chan.say(messageForSender);
+      }
     }
     else if(e.getType() == Type.CHANNEL_MESSAGE)
     {
@@ -480,11 +482,6 @@ public class Bot implements IRCEventListener
         parseURL(message,chan);
       }
     }
-    else if(e.getType() == Type.JOIN)
-    {
-      JoinEvent je = (JoinEvent)e;
-      addUser(je.getNick());
-    }
     else if(e.getType() == Type.NICK_CHANGE)
     {
       NickChangeEvent nce = (NickChangeEvent)e;
@@ -500,19 +497,6 @@ public class Bot implements IRCEventListener
       {
         addUser(nicks.get(i));
       }
-    }
-    else if(e.getType() == Type.PART ||
-            e.getType() == Type.QUIT ||
-            e.getType() == Type.KICK_EVENT)
-    {
-      String nick;
-      if(e.getType() == Type.PART)
-        nick = ((PartEvent)e).getWho();
-      else if(e.getType() == Type.QUIT)
-        nick = ((QuitEvent)e).getNick();
-      else
-        nick = ((KickEvent)e).getWho();
-      removeUser(nick);
     }
     else
     {
