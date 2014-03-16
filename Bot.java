@@ -307,7 +307,7 @@ public class Bot implements IRCEventListener
       JoinCompleteEvent jce = (JoinCompleteEvent)e;
       jce.getChannel().say("Hello, I'm cerealbot!");
     }
-    else if(e,getType() == Type.JOIN)
+    else if(e.getType() == Type.JOIN)
     {
         JoinEvent je = (JoinEvent)e;
         Channel chan = je.getChannel();
@@ -319,7 +319,7 @@ public class Bot implements IRCEventListener
       {
         User nick = getUser(joinNick);
         String messageForSender;
-        while((messageForSender = joinNick.returnLastMessage()) != null)
+        while((messageForSender = nick.returnLastMessage()) != null)
             chan.say(messageForSender);
       }
     }
