@@ -12,6 +12,7 @@ public class Bot implements IRCEventListener
   private static final int MAX_USERS = 100;
   private static final String BOTNAME = "cerealbot";
   private User[] userTable = new User[MAX_USERS];
+  private String lastLine;
   private int userCount;
   private Session session;
   private String channel;
@@ -60,6 +61,22 @@ public class Bot implements IRCEventListener
       e.printStackTrace();
     }
     this.qcount = count;
+  }
+
+  public String lmgtfy(String sender)
+  {
+      String backup = lastline;
+      String url = "http://lmgtfy.com/?q=";
+      String query = backup.replace("+", "%2B");
+      query = backup.replace(" ", "+");
+      query = backup.replace("*", "%2A");
+      query = backup.replace("/", "%2F");
+      query = backup.replace("@", "%40");
+      
+      url += query;
+      url = sender + " : " + url;
+
+      return url;
   }
 
   public int absolute(int hash)
@@ -298,14 +315,12 @@ public class Bot implements IRCEventListener
 
       if(getUser(sender) == null)
         addUser(sender);
-      boolean addLog = true;
       User nick = getUser(sender);
       String messageForSender;
       while((messageForSender = nick.returnLastMessage()) != null)
         chan.say(messageForSender);
       if(message.equalsIgnoreCase(".fortune"))
       {
-        addLog = false;
         try
         {
           Process pb = Runtime.getRuntime().exec("fortune");
@@ -346,14 +361,17 @@ public class Bot implements IRCEventListener
       {
         String note = message.substring(10);
         String dstNick = note.replace(" ", "");
-	if(dstNick.equals(""))
-	   dstNick = sender;
-	chan.say("And then " + dstNick + " was enlightened.");
+        if(dstNick.equals(""))
+            dstNick = sender;
+        
+        if(dstNick.equals("me"))
+            chan.say(lmgtfy(sender));
+        else
+            chan.say("And then " + dstNick + " was enlightened.");
       }
       else if(message.length() > 2 &&
           message.substring(0,2).equals("s/"))
       {
-        addLog = false;
         int index = message.substring(2).indexOf('/') + 2;
         String toReplace = message.substring(2,index);
         String replaceWith = message.substring(index+1);
@@ -380,8 +398,11 @@ public class Bot implements IRCEventListener
         }
         String dstNick = note.substring(0,note.indexOf(" "));
         note = note.substring(note.indexOf(" "));
-        if(getUser(dstNick) != null)
-          getUser(dstNick).reminder(sender,note);
+
+        if(getUser(dstNick) == null)
+          addUser(dstNick);
+
+        getUser(dstNick).reminder(sender,note);
         chan.say(sender + " : I'll pass that on when " + dstNick + 
                   " is around.");
       }
@@ -389,7 +410,6 @@ public class Bot implements IRCEventListener
           message.substring(0,9).equals(".addquote"))
       {
         BufferedWriter out = null;
-        addLog = false;
         try
         {
           String quote = message.substring(9);
@@ -432,16 +452,16 @@ public class Bot implements IRCEventListener
           message.substring(0,6).equals(".quote"))
       {
         quote(sender,chan,message);
-        addLog = false;
       }
-      else if(message.contains("http://") ||
+      else
+      {
+        nick.addLog(message);
+        lastLine = message;
+      }
+      if(message.contains("http://") ||
               message.contains("https://"))
       {
         parseURL(message,chan);
-      }
-      if(addLog)
-      {
-        nick.addLog(message);
       }
     }
     else if(e.getType() == Type.JOIN)
