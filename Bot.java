@@ -341,6 +341,15 @@ public class Bot implements IRCEventListener
                                   " entered previously with some other text.");
         session.sayPrivate(sender,"The buffer is up to the last 10 posts");
       }
+      else if(message.length() > 9 &&
+          message.substring(0,10).equals(".enlighten"))
+      {
+        String note = message.substring(10);
+        String dstNick = note.replace(" ", "");
+	if(dstNick.equals(""))
+	   dstNick = sender;
+	chan.say("And then " + dstNick + " was enlightened.");
+      }
       else if(message.length() > 2 &&
           message.substring(0,2).equals("s/"))
       {
@@ -412,7 +421,7 @@ public class Bot implements IRCEventListener
         try
         {
            Process pb = Runtime.getRuntime().exec(
-                        "cp quotes /data/www/quotes/");
+                        "cp quotes /var/www/quotes/");
         }
         catch(IOException ioe)
         {
