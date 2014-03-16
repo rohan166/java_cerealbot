@@ -68,10 +68,10 @@ public class Bot implements IRCEventListener
       String backup = lastline;
       String url = "http://lmgtfy.com/?q=";
       String query = backup.replace("+", "%2B");
-      query = backup.replace(" ", "+");
-      query = backup.replace("*", "%2A");
-      query = backup.replace("/", "%2F");
-      query = backup.replace("@", "%40");
+      query = query.replace(" ", "+");
+      query = query.replace("*", "%2A");
+      query = query.replace("/", "%2F");
+      query = query.replace("@", "%40");
       
       url += query;
       url = sender + " : " + url;
