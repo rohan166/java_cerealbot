@@ -65,7 +65,7 @@ public class Bot implements IRCEventListener
 
   public String lmgtfy(String sender)
   {
-      String backup = lastline;
+      String backup = lastLine;
       String url = "http://lmgtfy.com/?q=";
       String query = backup.replace("+", "%2B");
       query = query.replace(" ", "+");
