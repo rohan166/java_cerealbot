@@ -28,6 +28,7 @@ public class Bot implements IRCEventListener
     session.addIRCEventListener(this);
     session.setRejoinOnKick(true);
     this.channel = new String(channel);
+    System.out.println("WHAT");
   }
 
   public void parseQuotes()
@@ -306,6 +307,20 @@ public class Bot implements IRCEventListener
       JoinCompleteEvent jce = (JoinCompleteEvent)e;
       jce.getChannel().say("Hello, I'm cerealbot!");
     }
+    else if(e,getType() == Type.JOIN)
+    {
+        JoinEvent je = (JoinEvent)e;
+        Channel chan = je.getChannel();
+        String joinNick = je.getNick();
+
+      if(getUser(joinNick) == null)
+        addUser(joinNick);
+
+      User nick = getUser(joinNick);
+      String messageForSender;
+      while((messageForSender = joinNick.returnLastMessage()) != null)
+        chan.say(messageForSender);
+    }
     else if(e.getType() == Type.CHANNEL_MESSAGE)
     {
       MessageEvent me = (MessageEvent)e;
@@ -315,6 +330,7 @@ public class Bot implements IRCEventListener
 
       if(getUser(sender) == null)
         addUser(sender);
+
       User nick = getUser(sender);
       String messageForSender;
       while((messageForSender = nick.returnLastMessage()) != null)
